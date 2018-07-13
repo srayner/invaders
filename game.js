@@ -53,10 +53,11 @@ function setup() {
     swarm.aliens = [];
     for (var i=1; i<=10; i++) {
         alien = new Sprite(resources["alien.png"].texture);
-        alien.x = (i * 32) + 32;
+        alien.x = (i * 48) + 32;
         console.log (alien.x);
         alien.y = 32;
         swarm.aliens.push(alien);
+        app.stage.addChild(alien);
     }
     swarm.vx = 2;
 
@@ -65,7 +66,7 @@ function setup() {
     gun.y = 480 - 48;
     gun.vx = 0;
 
-    app.stage.addChild(alien);
+    
     app.stage.addChild(gun);
     app.ticker.add(delta => gameLoop(delta));
 }
