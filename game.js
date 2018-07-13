@@ -14,6 +14,7 @@ let app = new Application({
 });
 
 // Global vaiables
+let swarm = {};
 let alien;
 let gun;
 
@@ -49,11 +50,15 @@ loader
 
 // This `setup` function will run when the images have loaded.
 function setup() {
-
-    alien = new Sprite(resources["alien.png"].texture);
-    alien.x = 16;
-    alien.y = 32;
-    alien.vx = 2;
+    swarm.aliens = [];
+    for (var i=1; i<=10; i++) {
+        alien = new Sprite(resources["alien.png"].texture);
+        alien.x = (i * 32) + 32;
+        console.log (alien.x);
+        alien.y = 32;
+        swarm.aliens.push(alien);
+    }
+    swarm.vx = 2;
 
     gun = new Sprite(resources["gun.png"].texture);
     gun.x = 320 - 16;
@@ -67,15 +72,16 @@ function setup() {
 
 function gameLoop(delta) {
 
-    if (alien.x >= (640 - 32)) {
-        alien.vx = -2;
-    }
-
-    if (alien.x <= 0) {
-        alien.vx = 2;
-    }
-
-    alien.x += alien.vx;
+    swarm.aliens.forEach(alien => {
+        if (alien.x >= (640 - 32)) {
+            swarm.vx = -2;
+        }
+        if (alien.x <= 0) {
+            swarm.vx = 2;
+        }
+        alien.x += swarm.vx;
+    });
+    
     gun.x += gun.vx;
 }
 
