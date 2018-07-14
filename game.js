@@ -181,7 +181,7 @@ function updateGun() {
 
 function updatePlayerLaser() {
     playerLaser.y += playerLaser.vy;
-    if (playerLaser.y < 0) {
+    if (playerLaser.y < 64) {
         playerLaser.vy = 0;
         playerLaser.visible = false;
     }
