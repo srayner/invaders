@@ -22,6 +22,7 @@ let tick = 0;
 let pulseCount = 0;
 let pulse = [];
 let shoot;
+let score, scoreText;
 
 // Keyboard Handling
 let left = keyboard(37);
@@ -59,6 +60,7 @@ document.body.appendChild(app.view);
 // Load an image and run the `setup` function when it's done
 loader
     .add("alien1.png")
+    .add("alien2.png")
     .add("alien3.png")
     .add("gun.png")
     .add("laser.png")
@@ -82,7 +84,7 @@ sounds.whenLoaded = function(){
 // This `setup` function will run when the images have loaded.
 function setup() {
     
-    var images = ['alien1.png', 'alien3.png', 'alien3.png'];
+    var images = ['alien1.png', 'alien2.png', 'alien3.png'];
     swarm.aliens = [];
     for (var j=1; j<=3; j++) {
         for (var i=1; i<=10; i++) {
@@ -112,6 +114,18 @@ function setup() {
     app.stage.addChild(playerLaser);
     
     app.ticker.add(delta => gameLoop(delta));
+
+    score = 0;
+    style = {
+        fontFamily: 'Courier New',
+        fontSize: 24,
+        fill: ['#ffffff'], 
+    }
+    scoreText = new PIXI.Text(score, style);
+    scoreText.x = 24;
+    scoreText.y = 24;
+    app.stage.addChild(scoreText);
+    scoreText
 }
 
 function gameLoop(delta) {
@@ -128,6 +142,8 @@ function gameLoop(delta) {
     }
     updateGun();
     updatePlayerLaser();
+    checkAlienHit();
+    scoreText.text = 'score ' + score;
 }
 
 function updateGun() {
@@ -147,12 +163,12 @@ function updateSwarm()
     var dx = swarm.vx;
 
     swarm.aliens.forEach(alien => {
-        if (dx > 0 && alien.x >= (640 - 32)) {
+        if (alien.visible && dx > 0 && alien.x >= (640 - 32)) {
             dx = -8;
             swarm.vx = 0;
             swarm.vy = 16;
         }
-        if (dx < 0 && alien.x <= 0) {
+        if (alien.visible && dx < 0 && alien.x <= 0) {
             dx = 8;
             swarm.vx = 0;
             swarm.vy = 16;
@@ -167,6 +183,23 @@ function updateSwarm()
     swarm.vx = dx;
     swarm.vy = 0;
 
+}
+
+function checkAlienHit() {
+    if (playerLaser.visible === false) {
+        return;
+    }
+
+    lx = playerLaser.x;
+    ly = playerLaser.y;
+    swarm.aliens.forEach(alien => {
+        if (alien.visible && lx +3 >= alien.x && lx <= alien.x + 32 && ly + 12 >= alien.y && ly <= alien.y + 32) {
+            alien.visible = false;
+            playerLaser.vy = 0;
+            playerLaser.visible = false;
+            score = score + 10;
+        }
+    });
 }
 
 function keyboard(keyCode) {
