@@ -19,6 +19,7 @@ let alien;
 let gun;
 let playerLaser;
 let tick = 0;
+let tickReset = 45;
 let pulseCount = 0;
 let pulse = [];
 let shoot, invaderKilled;
@@ -120,6 +121,13 @@ function setup() {
     gun.vx = 0;
     app.stage.addChild(gun);
 
+    for (i=1; i<=3; i++) {
+        life = new Sprite(resources["gun.png"].texture);
+        life.x = 430 + (i * 40);
+        life.y = 20;
+        app.stage.addChild(life);
+    };
+
     playerLaser = new Sprite(resources["laser.png"].texture);
     playerLaser.x = gun.x;
     playerLaser.y = gun.y - 16;
@@ -137,12 +145,12 @@ function setup() {
         fill: ['#ffffff'], 
     }
     scoreText = new PIXI.Text(score, style);
-    scoreText.x = 24;
+    scoreText.x = 32;
     scoreText.y = 24;
     app.stage.addChild(scoreText);
 
     livesText = new PIXI.Text(score, style);
-    livesText.x = 320;
+    livesText.x = 380;
     livesText.y = 24;
     livesText.text ="lives"
     app.stage.addChild(livesText);
@@ -151,7 +159,7 @@ function setup() {
 function gameLoop(delta) {
 
     tick++;
-    if (tick > 64) {
+    if (tick > tickReset) {
         pulseCount++;
         if (pulseCount > 3) {
             pulseCount = 0;
@@ -188,13 +196,19 @@ function updateSwarm()
             dx = -8;
             swarm.vx = 0;
             swarm.vy = 16;
+            tickReset -= 5;
         }
         if (alien.visible && dx < 0 && alien.x <= 0) {
             dx = 8;
             swarm.vx = 0;
             swarm.vy = 16;
+            tickReset -= 5;
         }
     });
+
+    if (tickReset < 8) {
+        tickReset = 8;
+    }
 
     swarm.aliens.forEach(alien => {
         alien.x += swarm.vx;
