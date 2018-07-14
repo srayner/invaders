@@ -18,12 +18,15 @@ let swarm = {};
 let alien;
 let gun;
 let playerLaser;
+let invaderLasers = [];
 let tick = 0;
 let tickReset = 45;
 let pulseCount = 0;
 let pulse = [];
 let shoot, invaderKilled;
 let score, scoreText;
+let gameState = 'play';
+let invaderQty;
 
 // Keyboard Handling
 let left = keyboard(37);
@@ -68,6 +71,7 @@ loader
     .add("alienKilled3.png")
     .add("gun.png")
     .add("laser.png")
+    .add("invaderLaser.png")
     .load(setup);
 
 sounds.load([
@@ -92,16 +96,17 @@ function setup() {
     
     var images = ['alien1.png', 'alien2.png', 'alien3.png'];
     swarm.aliens = [];
+    invaderQty = 0;
     for (var j=1; j<=3; j++) {
         for (var i=1; i<=10; i++) {
             alien = new Sprite(resources[images[j-1]].texture);
             alien.x = (i * 48) + 32;
-            console.log (alien.x);
             alien.y = (j * 32) + 32;
             alien.value = 40 - (j * 10);
             alien.killedSprite = j-1;
             swarm.aliens.push(alien);
             app.stage.addChild(alien);
+            invaderQty++;
         }
     }
     swarm.vx = 8;
@@ -136,6 +141,10 @@ function setup() {
     playerLaser.visible = false;
     app.stage.addChild(playerLaser);
     
+    invaderLaser = new Sprite(resources["invaderLaser.png"].texture);
+    invaderLaser.visible = false;
+    app.stage.addChild(invaderLaser);
+
     app.ticker.add(delta => gameLoop(delta));
 
     score = 0;
@@ -157,6 +166,12 @@ function setup() {
 }
 
 function gameLoop(delta) {
+    if (gameState == 'play') {
+        play(delta);
+    }
+}
+
+function play(delta) {
 
     tick++;
     if (tick > tickReset) {
@@ -170,9 +185,17 @@ function gameLoop(delta) {
     }
     updateGun();
     updatePlayerLaser();
+    updateInvaderLasers();
     checkAlienHit();
     scoreText.text = 'score ' + score;
+    checkLevelEnd();
+}
 
+function checkLevelEnd()
+{
+    if (invaderQty <= 0) {
+        gameState = 'end';
+    }
 }
 
 function updateGun() {
@@ -185,6 +208,16 @@ function updatePlayerLaser() {
         playerLaser.vy = 0;
         playerLaser.visible = false;
     }
+}
+
+function updateInvaderLasers() {
+    invaderLasers.forEach(invaderLaser => {
+        invaderLaser.y += invaderLaser.vy;
+        if (invaderLaser.y === gun.y+32) {
+            invaderLaser.vy = 0;
+            invaderLaser.visible = false;
+        }
+    });
 }
 
 function updateSwarm()
@@ -213,6 +246,18 @@ function updateSwarm()
     swarm.aliens.forEach(alien => {
         alien.x += swarm.vx;
         alien.y += swarm.vy;
+        if (alien.visible) {
+            var rnd = Math.floor((Math.random() * 40) + 1);
+            if (rnd === 7 && alien.visible) {
+                invaderLaser = new Sprite(resources['invaderLaser.png'].texture);
+                invaderLaser.x = alien.x + 14;
+                invaderLaser.y = 100;
+                invaderLaser.vy = 6;
+                invaderLaser.visible = true;
+                invaderLasers.push(invaderLaser);
+                app.stage.addChild(invaderLaser);
+            }
+        }
     });
 
     alienKilledSprites.forEach(sprite => {
@@ -221,7 +266,6 @@ function updateSwarm()
 
     swarm.vx = dx;
     swarm.vy = 0;
-
 }
 
 function checkAlienHit() {
@@ -242,6 +286,7 @@ function checkAlienHit() {
             killedSprite.visible = true;
             invaderKilled.play();
             score = score + alien.value;
+            invaderQty--;
         }
     });
 }
