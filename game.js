@@ -21,8 +21,7 @@ let playerLaser;
 let tick = 0;
 let pulseCount = 0;
 let pulse = [];
-
-
+let shoot;
 
 // Keyboard Handling
 let left = keyboard(37);
@@ -46,11 +45,12 @@ left.release = () => {
 }
 
 fire.press = () => {
-    playerLaser.x = gun.x;
-    playerLaser.y = gun.y - 16;
+    playerLaser.x = gun.x + 15;
+    playerLaser.y = gun.y;
 
     playerLaser.visible = true;
     playerLaser.vy = -6;
+    shoot.play();
 }
 
 // Add the canvas that Pixi automatically created for you to the HTML document
@@ -58,33 +58,38 @@ document.body.appendChild(app.view);
 
 // Load an image and run the `setup` function when it's done
 loader
-    .add("alien.png")
+    .add("alien1.png")
+    .add("alien3.png")
     .add("gun.png")
+    .add("laser.png")
     .load(setup);
 
 sounds.load([
     "fastinvader1.wav",
     "fastinvader2.wav",
     "fastinvader3.wav",
-    "fastinvader4.wav"
+    "fastinvader4.wav",
+    "shoot.wav"
 ]);
 sounds.whenLoaded = function(){
     pulse.push(sounds["fastinvader1.wav"]);
     pulse.push(sounds["fastinvader2.wav"]);
     pulse.push(sounds["fastinvader3.wav"]);
     pulse.push(sounds["fastinvader4.wav"]);
+    shoot = sounds["shoot.wav"];
 }
 
 // This `setup` function will run when the images have loaded.
 function setup() {
     
+    var images = ['alien1.png', 'alien3.png', 'alien3.png'];
     swarm.aliens = [];
     for (var j=1; j<=3; j++) {
         for (var i=1; i<=10; i++) {
-            alien = new Sprite(resources["alien.png"].texture);
+            alien = new Sprite(resources[images[j-1]].texture);
             alien.x = (i * 48) + 32;
             console.log (alien.x);
-            alien.y = (j * 48) + 32;
+            alien.y = (j * 32) + 32;
             swarm.aliens.push(alien);
             app.stage.addChild(alien);
         }
@@ -98,7 +103,7 @@ function setup() {
     gun.vx = 0;
     app.stage.addChild(gun);
 
-    playerLaser = new Sprite(resources["alien.png"].texture);
+    playerLaser = new Sprite(resources["laser.png"].texture);
     playerLaser.x = gun.x;
     playerLaser.y = gun.y - 16;
     playerLaser.vx = 0;
