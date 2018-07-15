@@ -25,6 +25,8 @@ let pulseCount = 0;
 let pulse = [];
 let shoot, invaderKilled;
 let score, scoreText;
+let playKilled, explosion;
+let lifeImages = [], lives;
 let gameState = 'play';
 let invaderQty;
 
@@ -52,7 +54,6 @@ left.release = () => {
 fire.press = () => {
     playerLaser.x = gun.x + 15;
     playerLaser.y = gun.y;
-
     playerLaser.visible = true;
     playerLaser.vy = -10;
     shoot.play();
@@ -63,38 +64,41 @@ document.body.appendChild(app.view);
 
 // Load an image and run the `setup` function when it's done
 loader
-    .add("alien1.png")
-    .add("alien2.png")
-    .add("alien3.png")
-    .add("alienKilled1.png")
-    .add("alienKilled2.png")
-    .add("alienKilled3.png")
-    .add("gun.png")
-    .add("laser.png")
-    .add("invaderLaser.png")
+    .add('alien1', 'sprites/alien1.png')
+    .add('alien2', 'sprites/alien2.png')
+    .add('alien3', 'sprites/alien3.png')
+    .add('alienKilled1', 'sprites/alienKilled1.png')
+    .add('alienKilled2', 'sprites/alienKilled2.png')
+    .add('alienKilled3', 'sprites/alienKilled3.png')
+    .add('gun', 'sprites/gun.png')
+    .add('playerKilled', 'sprites/playerKilled.png')
+    .add('laser', 'sprites/laser.png')
+    .add('invaderLaser', 'sprites/invaderLaser.png')
     .load(setup);
 
 sounds.load([
-    "fastinvader1.wav",
-    "fastinvader2.wav",
-    "fastinvader3.wav",
-    "fastinvader4.wav",
-    "shoot.wav",
-    "invaderKilled.wav"
+    "sounds/fastinvader1.wav",
+    "sounds/fastinvader2.wav",
+    "sounds/fastinvader3.wav",
+    "sounds/fastinvader4.wav",
+    "sounds/shoot.wav",
+    "sounds/invaderKilled.wav",
+    "sounds/explosion.wav"
 ]);
 sounds.whenLoaded = function(){
-    pulse.push(sounds["fastinvader1.wav"]);
-    pulse.push(sounds["fastinvader2.wav"]);
-    pulse.push(sounds["fastinvader3.wav"]);
-    pulse.push(sounds["fastinvader4.wav"]);
-    shoot = sounds["shoot.wav"];
-    invaderKilled = sounds["invaderKilled.wav"];
+    pulse.push(sounds["sounds/fastinvader1.wav"]);
+    pulse.push(sounds["sounds/fastinvader2.wav"]);
+    pulse.push(sounds["sounds/fastinvader3.wav"]);
+    pulse.push(sounds["sounds/fastinvader4.wav"]);
+    shoot = sounds["sounds/shoot.wav"];
+    invaderKilled = sounds["sounds/invaderKilled.wav"];
+    explosion = sounds["sounds/explosion.wav"];
 }
 
 // This `setup` function will run when the images have loaded.
 function setup() {
     
-    var images = ['alien1.png', 'alien2.png', 'alien3.png'];
+    var images = ['alien1', 'alien2', 'alien3'];
     swarm.aliens = [];
     invaderQty = 0;
     for (var j=1; j<=3; j++) {
@@ -114,26 +118,31 @@ function setup() {
 
     alienKilledSprites = [];
     for (var i=1; i<=3; i++) {
-        sprite = new Sprite(resources['alienKilled' + i + '.png'].texture);
+        sprite = new Sprite(resources['alienKilled' + i].texture);
         sprite.visible = false;
         app.stage.addChild(sprite);
         alienKilledSprites.push(sprite);
     }
 
-    gun = new Sprite(resources["gun.png"].texture);
+    gun = new Sprite(resources["gun"].texture);
     gun.x = 320 - 16;
     gun.y = 480 - 48;
     gun.vx = 0;
     app.stage.addChild(gun);
 
+    playerKilled = new Sprite(resources["playerKilled"].texture);
+    playerKilled.visible = false;
+    app.stage.addChild(playerKilled);
+
     for (i=1; i<=3; i++) {
-        life = new Sprite(resources["gun.png"].texture);
+        life = new Sprite(resources["gun"].texture);
         life.x = 430 + (i * 40);
         life.y = 20;
+        lifeImages.push(life);
         app.stage.addChild(life);
     };
 
-    playerLaser = new Sprite(resources["laser.png"].texture);
+    playerLaser = new Sprite(resources["laser"].texture);
     playerLaser.x = gun.x;
     playerLaser.y = gun.y - 16;
     playerLaser.vx = 0;
@@ -141,13 +150,14 @@ function setup() {
     playerLaser.visible = false;
     app.stage.addChild(playerLaser);
     
-    invaderLaser = new Sprite(resources["invaderLaser.png"].texture);
+    invaderLaser = new Sprite(resources["invaderLaser"].texture);
     invaderLaser.visible = false;
     app.stage.addChild(invaderLaser);
 
     app.ticker.add(delta => gameLoop(delta));
 
     score = 0;
+    lives = 3
     style = {
         fontFamily: 'Courier New',
         fontSize: 24,
@@ -158,11 +168,11 @@ function setup() {
     scoreText.y = 24;
     app.stage.addChild(scoreText);
 
-    livesText = new PIXI.Text(score, style);
+    livesText = new PIXI.Text('lives', style);
     livesText.x = 380;
     livesText.y = 24;
-    livesText.text ="lives"
     app.stage.addChild(livesText);
+    
 }
 
 function gameLoop(delta) {
@@ -172,6 +182,11 @@ function gameLoop(delta) {
 }
 
 function play(delta) {
+    if (gun.visible === false) {
+        sleep(1000);
+        playerKilled.visible = false;
+        gun.visible = true;
+    }
 
     tick++;
     if (tick > tickReset) {
@@ -187,8 +202,35 @@ function play(delta) {
     updatePlayerLaser();
     updateInvaderLasers();
     checkAlienHit();
+    checkPlayerHit();
     scoreText.text = 'score ' + score;
     checkLevelEnd();
+    checkGameOver();
+}
+
+function checkPlayerHit() {
+    invaderLasers.forEach(invaderLaser => {
+        if (invaderLaser.visible && hitTestRectangle(invaderLaser, gun)) {
+            explosion.play();
+            invaderLaser.visible = false;
+            gun.visible = false;
+            playerKilled.x = gun.x;
+            playerKilled.y = gun.y;
+            playerKilled.visible = true;
+            lives--;
+            gun.x = 64;
+        }
+    })
+}
+
+function checkGameOver()
+{
+    lifeImages[2].visible = lives > 2;
+    lifeImages[1].visible = lives > 1;
+    lifeImages[0].visible = lives > 0;
+    if (lives < 1) {
+        gameState = 'end';
+    }
 }
 
 function checkLevelEnd()
@@ -249,7 +291,7 @@ function updateSwarm()
         if (alien.visible) {
             var rnd = Math.floor((Math.random() * 40) + 1);
             if (rnd === 7 && alien.visible) {
-                invaderLaser = new Sprite(resources['invaderLaser.png'].texture);
+                invaderLaser = new Sprite(resources['invaderLaser'].texture);
                 invaderLaser.x = alien.x + 14;
                 invaderLaser.y = 100;
                 invaderLaser.vy = 6;
