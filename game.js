@@ -30,6 +30,7 @@ let playKilled, explosion;
 let lifeImages = [], lives, livesGained;
 let gameState = 'play';
 let invaderQty;
+let level;
 
 // Keyboard Handling
 let left = keyboard(37);
@@ -151,6 +152,7 @@ function setup() {
     score = 0;
     lives = 3;
     livesGained = 0;
+    level = 0;
     style = {
         fontFamily: 'Courier New',
         fontSize: 24,
@@ -185,6 +187,11 @@ function initLevel()
         alien.visible = true;
         invaderQty++;
     })
+    tickReset = 60 - (level * 10);
+    if (tickReset < 15) {
+        tickReset = 15;
+    }
+    level++;
 }
 
 function buildInvaderRow(image, killedImageIndex, yPos, value) {
@@ -280,6 +287,12 @@ function increaseScore(value) {
 
 function updateGun() {
     gun.x += gun.vx;
+    if (gun.x < 4) {
+        gun.x = 4;
+    }
+    if (gun.x > (640 - 36)) {
+        gun.x = 640 - 36;
+    }
 }
 
 function updatePlayerLaser() {
