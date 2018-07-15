@@ -53,11 +53,13 @@ left.release = () => {
 }
 
 fire.press = () => {
-    playerLaser.x = gun.x + 15;
-    playerLaser.y = gun.y;
-    playerLaser.visible = true;
-    playerLaser.vy = -10;
-    shoot.play();
+    if (gun.visible && !playerLaser.visible) {
+        playerLaser.x = gun.x + 15;
+        playerLaser.y = gun.y;
+        playerLaser.visible = true;
+        playerLaser.vy = -10;
+        shoot.play();
+    }
 }
 
 // Add the canvas that Pixi automatically created for you to the HTML document
