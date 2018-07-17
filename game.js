@@ -44,7 +44,9 @@ right.press = () => {
 };
 
 right.release = () => {
-    gun.vx = 0;
+    if (gun.vx > 0) {
+        gun.vx = 0;
+    }
 }
 
 left.press = () => {
@@ -52,7 +54,9 @@ left.press = () => {
 };
 
 left.release = () => {
-    gun.vx = 0;
+    if (gun.vx < 0) {
+        gun.vx = 0;
+    }
 }
 
 fire.press = () => {
