@@ -4,6 +4,7 @@ let Application = PIXI.Application,
     loader = PIXI.loader,
     resources = PIXI.loader.resources,
     Sprite = PIXI.Sprite;
+    Container = PIXI.Container;
 
 // Create a Pixi Application
 let app = new Application({
@@ -15,6 +16,7 @@ let app = new Application({
 });
 
 // Global vaiables
+let titleScene, gameScene, endScene;
 let swarm = {};
 let alien;
 let gun;
@@ -28,7 +30,7 @@ let shoot, invaderKilled;
 let score, scoreText;
 let playKilled, explosion;
 let lifeImages = [], lives, livesGained;
-let gameState = 'play';
+let gameState = 'title';
 let invaderQty;
 let level;
 
@@ -54,6 +56,13 @@ left.release = () => {
 }
 
 fire.press = () => {
+    if (gameState === 'title') {
+        titleScene.visible = false;
+        gameScene.visible = true;
+        gameState = 'play';
+        return;
+    }
+
     if (gun.visible && !playerLaser.visible) {
         playerLaser.x = gun.x + 15;
         playerLaser.y = gun.y;
@@ -100,7 +109,24 @@ sounds.whenLoaded = function(){
 }
 
 // This `setup` function will run when the images have loaded.
-function setup() {    
+function setup() {
+
+    titleScene = new Container;
+    app.stage.addChild(titleScene);
+    createText(titleScene, 'Invaders', 320, 40, 32, '#0000ff', 'center');
+    createText(titleScene, '= 40 points', 260, 180, 24, '#ffffff', 'left');
+    createText(titleScene, '= 20 points', 260, 210, 24, '#ffffff', 'left');
+    createText(titleScene, '= 10 points', 260, 240, 24, '#ffffff', 'left');
+    createSprite(titleScene, 'alien3', 210, 180);
+    createSprite(titleScene, 'alien2', 210, 210);
+    createSprite(titleScene, 'alien1', 210, 240);
+    createText(titleScene, 'Press \'Space\' to play', 320, 360, 24, '#ffffff', 'center');
+    
+
+    gameScene = new Container;
+    gameScene.visible = false;
+    app.stage.addChild(gameScene);
+
     swarm.aliens = [];
     invaderQty = 0;
     buildInvaderRow('alien3', 2, 64, 40);
@@ -115,7 +141,7 @@ function setup() {
     for (var i=1; i<=3; i++) {
         sprite = new Sprite(resources['alienKilled' + i].texture);
         sprite.visible = false;
-        app.stage.addChild(sprite);
+        gameScene.addChild(sprite);
         alienKilledSprites.push(sprite);
     }
 
@@ -123,18 +149,18 @@ function setup() {
     gun.x = 320 - 16;
     gun.y = 480 - 48;
     gun.vx = 0;
-    app.stage.addChild(gun);
+    gameScene.addChild(gun);
 
     playerKilled = new Sprite(resources["playerKilled"].texture);
     playerKilled.visible = false;
-    app.stage.addChild(playerKilled);
+    gameScene.addChild(playerKilled);
 
     for (i=1; i<=3; i++) {
         life = new Sprite(resources["gun"].texture);
         life.x = 430 + (i * 40);
         life.y = 20;
         lifeImages.push(life);
-        app.stage.addChild(life);
+        gameScene.addChild(life);
     };
 
     playerLaser = new Sprite(resources["laser"].texture);
@@ -143,30 +169,26 @@ function setup() {
     playerLaser.vx = 0;
     playerLaser.vy = 0;
     playerLaser.visible = false;
-    app.stage.addChild(playerLaser);
+    gameScene.addChild(playerLaser);
     
     invaderLaser = new Sprite(resources["invaderLaser"].texture);
     invaderLaser.visible = false;
-    app.stage.addChild(invaderLaser);
+    gameScene.addChild(invaderLaser);
 
     score = 0;
     lives = 3;
     livesGained = 0;
     level = 0;
-    style = {
-        fontFamily: 'Courier New',
-        fontSize: 24,
-        fill: ['#ffffff'], 
-    }
+    
     scoreText = new PIXI.Text(score, style);
     scoreText.x = 32;
     scoreText.y = 24;
-    app.stage.addChild(scoreText);
+    gameScene.addChild(scoreText);
 
     livesText = new PIXI.Text('lives', style);
     livesText.x = 380;
     livesText.y = 24;
-    app.stage.addChild(livesText);
+    gameScene.addChild(livesText);
 
     initLevel();
 
@@ -203,7 +225,7 @@ function buildInvaderRow(image, killedImageIndex, yPos, value) {
         alien.value = value;
         alien.killedSprite = killedImageIndex;
         swarm.aliens.push(alien);
-        app.stage.addChild(alien);
+        gameScene.addChild(alien);
         invaderQty++;
     }
 }
@@ -344,11 +366,11 @@ function updateSwarm()
             if (rnd === 7 && alien.visible) {
                 invaderLaser = new Sprite(resources['invaderLaser'].texture);
                 invaderLaser.x = alien.x + 14;
-                invaderLaser.y = 100;
+                invaderLaser.y = alien.y + 24;
                 invaderLaser.vy = 6;
                 invaderLaser.visible = true;
                 invaderLasers.push(invaderLaser);
-                app.stage.addChild(invaderLaser);
+                gameScene.addChild(invaderLaser);
             }
         }
     });
@@ -420,4 +442,26 @@ function keyboard(keyCode) {
         "keyup", key.upHandler.bind(key), false
     );
     return key;
+}
+
+function createText(scene, text, x, y, size, color, justify) {
+    style = {
+        fontFamily: 'Courier New',
+        fontSize: size,
+        fill: [color], 
+    }
+    var txt = new PIXI.Text(text, style);
+    txt.x = x;
+    if (justify === 'center') {
+        txt.x -= (txt.width / 2);
+    }
+    txt.y = y;
+    scene.addChild(txt);
+};
+
+function createSprite(scene, name, x, y) {
+    var sprite = new Sprite(resources[name].texture);
+    sprite.x = x;
+    sprite.y = y;
+    scene.addChild(sprite);
 }
