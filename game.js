@@ -21,6 +21,7 @@ let swarm = {};
 let alien;
 let gun;
 let playerLaser;
+let bonusShip, ufoHigh, ufoLow;
 let invaderLasers = [];
 let tick = 0;
 let tickReset = 45;
@@ -71,7 +72,7 @@ fire.press = () => {
         playerLaser.x = gun.x + 15;
         playerLaser.y = gun.y;
         playerLaser.visible = true;
-        playerLaser.vy = -10;
+        playerLaser.vy = -9;
         shoot.play();
     }
 }
@@ -87,6 +88,7 @@ loader
     .add('alienKilled1', 'sprites/alienKilled1.png')
     .add('alienKilled2', 'sprites/alienKilled2.png')
     .add('alienKilled3', 'sprites/alienKilled3.png')
+    .add('bonusShip', 'sprites/bonus.png')
     .add('gun', 'sprites/gun.png')
     .add('playerKilled', 'sprites/playerKilled.png')
     .add('laser', 'sprites/laser.png')
@@ -98,6 +100,8 @@ sounds.load([
     "sounds/fastinvader2.wav",
     "sounds/fastinvader3.wav",
     "sounds/fastinvader4.wav",
+    "sounds/ufo_highpitch.wav",
+    "sounds/ufo_lowpitch.wav",
     "sounds/shoot.wav",
     "sounds/invaderKilled.wav",
     "sounds/explosion.wav"
@@ -108,6 +112,10 @@ sounds.whenLoaded = function(){
     pulse.push(sounds["sounds/fastinvader3.wav"]);
     pulse.push(sounds["sounds/fastinvader4.wav"]);
     shoot = sounds["sounds/shoot.wav"];
+    ufoHigh = sounds["sounds/ufo_highpitch.wav"];
+    ufoHigh.loop = true;
+    ufoLow = sounds["sounds/ufo_lowpitch.wav"];
+    ufoLow.loop = true;
     invaderKilled = sounds["sounds/invaderKilled.wav"];
     explosion = sounds["sounds/explosion.wav"];
 }
@@ -133,11 +141,11 @@ function setup() {
 
     swarm.aliens = [];
     invaderQty = 0;
-    buildInvaderRow('alien3', 2, 64, 40);
-    buildInvaderRow('alien2', 1, 96, 20);
+    buildInvaderRow('alien3', 2, 96, 40);
     buildInvaderRow('alien2', 1, 128, 20);
-    buildInvaderRow('alien1', 0, 160, 10);
+    buildInvaderRow('alien2', 1, 160, 20);
     buildInvaderRow('alien1', 0, 192, 10);
+    buildInvaderRow('alien1', 0, 224, 10);
     swarm.vx = 8;
     swarm.vy = 0;
 
@@ -148,6 +156,13 @@ function setup() {
         gameScene.addChild(sprite);
         alienKilledSprites.push(sprite);
     }
+
+    bonusShip = new Sprite(resources["bonusShip"].texture);
+    bonusShip.x = 0;
+    bonusShip.y = 64;
+    bonusShip.vx = 0;
+    bonusShip.visible = false;
+    gameScene.addChild(bonusShip);
 
     gun = new Sprite(resources["gun"].texture);
     gun.x = 320 - 16;
@@ -261,11 +276,55 @@ function play(delta) {
     updateGun();
     updatePlayerLaser();
     updateInvaderLasers();
+    updateBonusShip();
     checkAlienHit();
+    checkBonusShipHit();
     checkPlayerHit();
+
     scoreText.text = 'score ' + score;
     
     checkGameOver();
+}
+
+function checkBonusShipHit() {
+    if (playerLaser.visible && bonusShip.visible && hitTestRectangle(playerLaser, bonusShip)) {
+        bonusShip.visible = false;
+        bonusShip.vx = 0;
+        bonusShip.sound.pause();
+        increaseScore(bonusShip.value);
+    }
+}
+
+function updateBonusShip() {
+
+    if (bonusShip.visible) {
+        bonusShip.x += bonusShip.vx;
+        if ((bonusShip.vx > 0 && bonusShip.x > 640) || (bonusShip.vx < 0 && bonusShip.x < 0)){
+            bonusShip.visible = false;
+            bonusShip.sound.pause();
+        }
+    }
+
+    if (!bonusShip.visible) {
+        var rnd = Math.floor((Math.random() * 2000) + 1);
+        if (rnd === 14) {
+            bonusShip.visible = true;
+            bonusShip.value = 100;
+            bonusShip.sound = ufoLow;
+            bonusShip.x = 0;
+            bonusShip.vx = 3;
+            bonusShip.sound.play();
+
+        }
+        if (rnd === 28) {
+            bonusShip.visible = true;
+            bonusShip.value = 200;
+            bonusShip.sound = ufoHigh;
+            bonusShip.x = 640;
+            bonusShip.vx = -3;
+            bonusShip.sound.play();
+        }
+    }
 }
 
 function checkPlayerHit() {
@@ -289,6 +348,7 @@ function checkGameOver()
     lifeImages[1].visible = lives > 1;
     lifeImages[0].visible = lives > 0;
     if (lives < 1) {
+        bonusShip.sound.pause();
         gameState = 'end';
     }
 }
@@ -358,8 +418,8 @@ function updateSwarm()
         }
     });
 
-    if (tickReset < 8) {
-        tickReset = 8;
+    if (tickReset < 5) {
+        tickReset = 5;
     }
 
     swarm.aliens.forEach(alien => {
