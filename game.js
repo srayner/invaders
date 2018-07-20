@@ -195,10 +195,6 @@ function setup() {
     playerLaser.visible = false;
     gameScene.addChild(playerLaser);
     
-    invaderLaser = new Sprite(resources["invaderLaser"].texture);
-    invaderLaser.visible = false;
-    gameScene.addChild(invaderLaser);
-    
     scoreText = new PIXI.Text('0', style);
     scoreText.x = 32;
     scoreText.y = 24;
@@ -229,6 +225,9 @@ function initLevel()
     if (tickReset < 15) {
         tickReset = 15;
     }
+
+    playerLaser.visible = false;
+
     level++;
 }
 
