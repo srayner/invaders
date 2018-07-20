@@ -62,6 +62,11 @@ left.release = () => {
 
 fire.press = () => {
     if (gameState === 'title') {
+        score = 0;
+        lives = 3;
+        livesGained = 0;
+        level = 0;
+        initLevel();
         titleScene.visible = false;
         gameScene.visible = true;
         gameState = 'play';
@@ -193,13 +198,8 @@ function setup() {
     invaderLaser = new Sprite(resources["invaderLaser"].texture);
     invaderLaser.visible = false;
     gameScene.addChild(invaderLaser);
-
-    score = 0;
-    lives = 3;
-    livesGained = 0;
-    level = 0;
     
-    scoreText = new PIXI.Text(score, style);
+    scoreText = new PIXI.Text('0', style);
     scoreText.x = 32;
     scoreText.y = 24;
     gameScene.addChild(scoreText);
@@ -209,14 +209,11 @@ function setup() {
     livesText.y = 24;
     gameScene.addChild(livesText);
 
-    initLevel();
-
     app.ticker.add(delta => gameLoop(delta));
 }
 
 function initLevel()
 {
-    sleep(800);
     alienKilledSprites.forEach(sprite => {
         sprite.visible = false;
     });
@@ -250,7 +247,8 @@ function buildInvaderRow(image, killedImageIndex, yPos, value) {
 }
 
 function gameLoop(delta) {
-    if (gameState == 'play') {
+    
+    if (gameState == 'play' || gameState == 'end') {
         play(delta);
     }
 }
@@ -291,6 +289,7 @@ function checkBonusShipHit() {
         bonusShip.visible = false;
         bonusShip.vx = 0;
         bonusShip.sound.pause();
+        invaderKilled.play();
         increaseScore(bonusShip.value);
     }
 }
@@ -344,18 +343,30 @@ function checkPlayerHit() {
 
 function checkGameOver()
 {
+    if (gameState == 'end') {
+        sleep(4000);
+        gameScene.visible = false;
+        titleScene.visible = true;
+        gameState = 'title';
+        return;
+    }
+
     lifeImages[2].visible = lives > 2;
     lifeImages[1].visible = lives > 1;
     lifeImages[0].visible = lives > 0;
     if (lives < 1) {
-        bonusShip.sound.pause();
+        if (bonusShip.hasOwnProperty('sound')){
+            bonusShip.sound.pause();
+        }
         gameState = 'end';
     }
 }
 
 function checkLevelEnd()
 {
-    if (invaderQty <= 0) {
+    if (invaderQty <= 0 && !bonusShip.visible) {
+        playerLaser.visible = false;
+        sleep(800);
         initLevel();
     }
 }
@@ -373,11 +384,11 @@ function increaseScore(value) {
 
 function updateGun() {
     gun.x += gun.vx;
-    if (gun.x < 4) {
-        gun.x = 4;
+    if (gun.x < 16) {
+        gun.x = 16;
     }
-    if (gun.x > (640 - 36)) {
-        gun.x = 640 - 36;
+    if (gun.x > (640 - 48)) {
+        gun.x = 640 - 48;
     }
 }
 
