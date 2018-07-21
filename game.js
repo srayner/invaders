@@ -21,7 +21,7 @@ let swarm = {};
 let alien;
 let gun;
 let playerLaser;
-let bonusShip, ufoHigh, ufoLow;
+let bonusShip, ufoHigh, ufoLow, bonusTextTimeout;
 let invaderLasers = [];
 let tick = 0;
 let tickReset = 45;
@@ -131,7 +131,7 @@ function setup() {
     titleScene = new Container;
     app.stage.addChild(titleScene);
     createText(titleScene, 'Invaders', 320, 40, 32, '#0000ff', 'center');
-    createText(titleScene, '= 40 points', 260, 180, 24, '#ffffff', 'left');
+    createText(titleScene, '= 30 points', 260, 180, 24, '#ffffff', 'left');
     createText(titleScene, '= 20 points', 260, 210, 24, '#ffffff', 'left');
     createText(titleScene, '= 10 points', 260, 240, 24, '#ffffff', 'left');
     createSprite(titleScene, 'alien3', 210, 180);
@@ -146,7 +146,7 @@ function setup() {
 
     swarm.aliens = [];
     invaderQty = 0;
-    buildInvaderRow('alien3', 2, 96, 40);
+    buildInvaderRow('alien3', 2, 96, 30);
     buildInvaderRow('alien2', 1, 128, 20);
     buildInvaderRow('alien2', 1, 160, 20);
     buildInvaderRow('alien1', 0, 192, 10);
@@ -168,6 +168,9 @@ function setup() {
     bonusShip.vx = 0;
     bonusShip.visible = false;
     gameScene.addChild(bonusShip);
+
+    bonusText = createText(gameScene, '100', 0, 64, 14, '#ffffff', 'center');
+    bonusText.visible = false;
 
     gun = new Sprite(resources["gun"].texture);
     gun.x = 320 - 16;
@@ -195,15 +198,8 @@ function setup() {
     playerLaser.visible = false;
     gameScene.addChild(playerLaser);
     
-    scoreText = new PIXI.Text('0', style);
-    scoreText.x = 32;
-    scoreText.y = 24;
-    gameScene.addChild(scoreText);
-
-    livesText = new PIXI.Text('lives', style);
-    livesText.x = 380;
-    livesText.y = 24;
-    gameScene.addChild(livesText);
+    scoreText = createText(gameScene, '0', 32, 24, 24, '#ffffff', 'left');
+    livesText = createText(gameScene, 'lives', 380, 24, 24, '#ffffff', 'left');
 
     app.ticker.add(delta => gameLoop(delta));
 }
@@ -232,10 +228,10 @@ function initLevel()
 }
 
 function buildInvaderRow(image, killedImageIndex, yPos, value) {
-    for (var i=1; i<=10; i++) {
+    for (var i=1; i<=11; i++) {
         alien = new Sprite(resources[image].texture);
         alien.visible = false;
-        alien.ix = (i * 48) + 32;
+        alien.ix = (i * 44) + 44;
         alien.iy = yPos;
         alien.value = value;
         alien.killedSprite = killedImageIndex;
@@ -288,6 +284,10 @@ function checkBonusShipHit() {
         bonusShip.visible = false;
         bonusShip.vx = 0;
         bonusShip.sound.pause();
+        bonusText.text = bonusShip.value;
+        bonusText.x = bonusShip.x + 5;
+        bonusText.visible = true;
+        bonusTextTimeout = 30;
         invaderKilled.play();
         increaseScore(bonusShip.value);
     }
@@ -295,6 +295,11 @@ function checkBonusShipHit() {
 
 function updateBonusShip() {
 
+    if (bonusText.visible) {
+        bonusTextTimeout--;
+        bonusText.visible = (bonusTextTimeout > 0);
+    }
+    
     if (bonusShip.visible) {
         bonusShip.x += bonusShip.vx;
         if ((bonusShip.vx > 0 && bonusShip.x > 640) || (bonusShip.vx < 0 && bonusShip.x < 0)){
@@ -307,7 +312,7 @@ function updateBonusShip() {
         var rnd = Math.floor((Math.random() * 2000) + 1);
         if (rnd === 14) {
             bonusShip.visible = true;
-            bonusShip.value = 100;
+            bonusShip.value = Math.floor((Math.random() * 5) + 1) * 50;
             bonusShip.sound = ufoLow;
             bonusShip.x = 0;
             bonusShip.vx = 3;
@@ -316,7 +321,7 @@ function updateBonusShip() {
         }
         if (rnd === 28) {
             bonusShip.visible = true;
-            bonusShip.value = 200;
+            bonusShip.value = Math.floor((Math.random() * 5) + 1) * 50;
             bonusShip.sound = ufoHigh;
             bonusShip.x = 640;
             bonusShip.vx = -3;
@@ -531,6 +536,7 @@ function createText(scene, text, x, y, size, color, justify) {
     }
     txt.y = y;
     scene.addChild(txt);
+    return txt;
 };
 
 function createSprite(scene, name, x, y) {
