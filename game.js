@@ -437,11 +437,11 @@ function updateSwarm()
         tickReset = 5;
     }
 
-    swarm.aliens.forEach(alien => {
+    swarm.aliens.forEach((alien, index) => {
         alien.x += swarm.vx;
         alien.y += swarm.vy;
-        if (alien.visible) {
-            var rnd = Math.floor((Math.random() * 40) + 1);
+        if (alien.visible && invaderCanFire(index)) {
+            var rnd = Math.floor((Math.random() * 7) + 1);
             if (rnd === 7 && alien.visible) {
                 invaderLaser = new Sprite(resources['invaderLaser'].texture);
                 invaderLaser.x = alien.x + 14;
@@ -483,6 +483,17 @@ function checkAlienHit() {
             invaderQty--;
         }
     });
+}
+
+function invaderCanFire(invaderIndex) {
+    i = invaderIndex + 11;   
+    while (i < swarm.aliens.length) {
+        if (swarm.aliens[i].visible) {
+            return false;
+        }
+        i += 11;
+    }
+    return true;
 }
 
 function keyboard(keyCode) {
