@@ -22,6 +22,7 @@ let alien;
 let gun;
 let playerLaser;
 let bonusShip, ufoHigh, ufoLow, bonusTextTimeout;
+let reachedBottom;
 let invaderLasers = [];
 let tick = 0;
 let tickReset = 45;
@@ -210,6 +211,8 @@ function initLevel()
         sprite.visible = false;
     });
 
+    reachedBottom = false;
+
     invaderQty = 0;
     swarm.aliens.forEach(alien => {
         alien.x = alien.ix;
@@ -266,6 +269,7 @@ function play(delta) {
         pulse[pulseCount].play();
         tick = 0;
     }
+    checkInvadersReachedBottom();
     updateGun();
     updatePlayerLaser();
     updateInvaderLasers();
@@ -375,6 +379,26 @@ function checkLevelEnd()
     }
 }
 
+function checkInvadersReachedBottom()
+{
+    if (reachedBottom) {
+        sleep(400);
+        initLevel();
+    } else {
+        swarm.aliens.forEach(alien => {
+            if (alien.visible && alien.y > 480 - 96) {
+                reachedBottom = true;
+                explosion.play();
+                gun.visible = false;
+                playerKilled.x = gun.x;
+                playerKilled.y = gun.y;
+                playerKilled.visible = true;
+                lives--;
+            }
+        });
+    }
+}
+
 function increaseScore(value) {
     score = score + value;
     if ((score / 2000) >= livesGained) {
@@ -423,13 +447,13 @@ function updateSwarm()
             dx = -8;
             swarm.vx = 0;
             swarm.vy = 16;
-            tickReset -= 5;
+            tickReset -= 10;
         }
         if (alien.visible && dx < 0 && alien.x <= 0) {
             dx = 8;
             swarm.vx = 0;
             swarm.vy = 16;
-            tickReset -= 5;
+            tickReset -= 10;
         }
     });
 
