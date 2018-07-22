@@ -175,7 +175,7 @@ function setup() {
 
     gun = new Sprite(resources["gun"].texture);
     gun.x = 320 - 16;
-    gun.y = 480 - 48;
+    gun.y = 480 - 32;
     gun.vx = 0;
     gameScene.addChild(gun);
 
@@ -386,16 +386,18 @@ function checkInvadersReachedBottom()
         initLevel();
     } else {
         swarm.aliens.forEach(alien => {
-            if (alien.visible && alien.y > 480 - 96) {
+            if (alien.visible && alien.y >= 480 - 64) {
                 reachedBottom = true;
-                explosion.play();
-                gun.visible = false;
-                playerKilled.x = gun.x;
-                playerKilled.y = gun.y;
-                playerKilled.visible = true;
-                lives--;
             }
         });
+        if (reachedBottom) {
+            explosion.play();
+            gun.visible = false;
+            playerKilled.x = gun.x;
+            playerKilled.y = gun.y;
+            playerKilled.visible = true;
+            lives--;
+        }
     }
 }
 
