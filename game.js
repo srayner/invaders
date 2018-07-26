@@ -1,4 +1,7 @@
 
+// Constants
+const GUN_MAX_VELOCITY = 10;
+
 // Aliases
 let Application = PIXI.Application,
     loader = PIXI.loader,
@@ -466,25 +469,19 @@ function increaseScore(value) {
 }
 
 function updateGun() {
+    
+    // Update gun position.
     gun.x += gun.vx;
-    if (gun.x < 16) {
-        gun.x = 16;
-    }
-    if (gun.x > (640 - 48)) {
-        gun.x = 640 - 48;
-    }
-
+    gun.x = Math.max(gun.x, 16);
+    gun.x = Math.min(gun.x, (640 - gun.width - 16));
+    
+    // If gun is moving increase velocity.
     if (gun.vx != 0) {
         gun.vx += gun.ax;
     }
 
-    if (gun.vx > 6) {
-        gun.vx = 6;
-    }
-
-    if (gun.vx < -6) {
-        gun.vx = -6;
-    }
+    // Restrict gun to a maximum velocity.
+    gun.vx = Math.sign(gun.vx) * Math.min(GUN_MAX_VELOCITY, Math.abs(gun.vx));
 }
 
 function updatePlayerLaser() {
