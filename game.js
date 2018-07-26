@@ -22,6 +22,7 @@ let alien;
 let gun;
 let playerLaser;
 let bonusShip, ufoHigh, ufoLow, bonusTextTimeout;
+let shelters = [];
 let reachedBottom;
 let invaderLasers = [];
 let tick = 0;
@@ -42,21 +43,25 @@ let right = keyboard(39);
 let fire = keyboard(32);
 
 right.press = () => {
-    gun.vx = 6;
+    gun.ax = 0.4;
+    gun.vx = 1;
 };
 
 right.release = () => {
     if (gun.vx > 0) {
+        gun.ax = 0;
         gun.vx = 0;
     }
 }
 
 left.press = () => {
-    gun.vx = -6;
+    gun.ax = -0.4;
+    gun.vx = -1;
 };
 
 left.release = () => {
     if (gun.vx < 0) {
+        gun.ax = 0;
         gun.vx = 0;
     }
 }
@@ -99,7 +104,17 @@ loader
     .add('playerKilled', 'sprites/playerKilled.png')
     .add('laser', 'sprites/laser.png')
     .add('invaderLaser', 'sprites/invaderLaser.png')
+    .add('shelter1', 'sprites/shelter1.png')
+    .add('shelter2', 'sprites/shelter2.png')
+    .add('shelter3', 'sprites/shelter3.png')
+    .add('shelter4', 'sprites/shelter4.png')
+    .add('shelter5', 'sprites/shelter5.png')
+    .add('shelter6', 'sprites/shelter6.png')
+    .add('shelter7', 'sprites/shelter7.png')
+    .add('shelter8', 'sprites/shelter8.png')
+    .add('shelter9', 'sprites/shelter9.png')
     .load(setup);
+
 
 sounds.load([
     "sounds/fastinvader1.wav",
@@ -199,6 +214,10 @@ function setup() {
     playerLaser.visible = false;
     gameScene.addChild(playerLaser);
     
+    shelters.push(createShelter(gameScene, 64, 480 - 80));
+    shelters.push(createShelter(gameScene, 296, 480 - 80));
+    shelters.push(createShelter(gameScene, 640 - 112, 480 - 80));
+
     scoreText = createText(gameScene, '0', 32, 24, 24, '#ffffff', 'left');
     livesText = createText(gameScene, 'lives', 380, 24, 24, '#ffffff', 'left');
 
@@ -226,6 +245,12 @@ function initLevel()
     }
 
     playerLaser.visible = false;
+
+    shelters.forEach(shelter => {
+        shelter.forEach(s => {
+            s.visible = true;
+        });
+    });
 
     level++;
 }
@@ -274,6 +299,7 @@ function play(delta) {
     updatePlayerLaser();
     updateInvaderLasers();
     updateBonusShip();
+    checkShelterHit();
     checkAlienHit();
     checkBonusShipHit();
     checkPlayerHit();
@@ -281,6 +307,33 @@ function play(delta) {
     scoreText.text = 'score ' + score;
     
     checkGameOver();
+}
+
+function checkShelterHit() {
+    if (playerLaser.visible) {
+        shelters.forEach(shelter => {
+            shelter.forEach(s => {
+                if (s.visible && hitTestRectangle(playerLaser, s)) {
+                    playerLaser.vy = 0;
+                    playerLaser.visible = false;
+                    s.visible = false;
+                }
+            });
+        });
+    }
+
+    invaderLasers.forEach(invaderLaser => {
+        if (invaderLaser.visible) {
+            shelters.forEach(shelter => {
+                shelter.forEach(s => {
+                    if (s.visible && hitTestRectangle(invaderLaser, s)) {
+                        invaderLaser.visible = false;
+                        s.visible = false;
+                    }
+                });
+            });
+        }
+    });
 }
 
 function checkBonusShipHit() {
@@ -420,6 +473,18 @@ function updateGun() {
     if (gun.x > (640 - 48)) {
         gun.x = 640 - 48;
     }
+
+    if (gun.vx != 0) {
+        gun.vx += gun.ax;
+    }
+
+    if (gun.vx > 6) {
+        gun.vx = 6;
+    }
+
+    if (gun.vx < -6) {
+        gun.vx = -6;
+    }
 }
 
 function updatePlayerLaser() {
@@ -467,12 +532,12 @@ function updateSwarm()
         alien.x += swarm.vx;
         alien.y += swarm.vy;
         if (alien.visible && invaderCanFire(index)) {
-            var rnd = Math.floor((Math.random() * 7) + 1);
+            var rnd = Math.floor((Math.random() * 14) + 1);
             if (rnd === 7 && alien.visible) {
                 invaderLaser = new Sprite(resources['invaderLaser'].texture);
                 invaderLaser.x = alien.x + 14;
                 invaderLaser.y = alien.y + 24;
-                invaderLaser.vy = 6;
+                invaderLaser.vy = 4;
                 invaderLaser.visible = true;
                 invaderLasers.push(invaderLaser);
                 gameScene.addChild(invaderLaser);
@@ -581,4 +646,36 @@ function createSprite(scene, name, x, y) {
     sprite.x = x;
     sprite.y = y;
     scene.addChild(sprite);
+    return sprite;
+}
+
+function createShelter(scene, x, y) {
+    s1 = createSprite(scene, 'shelter1', x, y);
+    s2 = createSprite(scene, 'shelter2', x + 8, y);
+    s3 = createSprite(scene, 'shelter2', x + 16, y);
+    s4 = createSprite(scene, 'shelter2', x + 24, y);
+    s5 = createSprite(scene, 'shelter2', x + 32, y);
+    s6 = createSprite(scene, 'shelter3', x + 40, y);
+
+    s7 = createSprite(scene, 'shelter2', x, y + 8);
+    s8 = createSprite(scene, 'shelter2', x + 8, y + 8);
+    s9 = createSprite(scene, 'shelter2', x + 16, y + 8);
+    s10 = createSprite(scene, 'shelter2', x + 24, y + 8);
+    s11 = createSprite(scene, 'shelter2', x + 32, y + 8);
+    s12 = createSprite(scene, 'shelter2', x + 40, y + 8);
+
+    s13 = createSprite(scene, 'shelter2', x, y + 16);
+    s14 = createSprite(scene, 'shelter8', x + 8, y + 16);
+    s15 = createSprite(scene, 'shelter4', x + 16, y + 16);
+    s16 = createSprite(scene, 'shelter5', x + 24, y+ 16);
+    s17 = createSprite(scene, 'shelter9', x + 32, y + 16);
+    s18 = createSprite(scene, 'shelter2', x + 40, y + 16);
+
+    s19 = createSprite(scene, 'shelter2', x, y + 24);
+    s20 = createSprite(scene, 'shelter6', x + 8, y + 24);
+    s21 = createSprite(scene, 'shelter7', x + 32, y + 24);
+    s22 = createSprite(scene, 'shelter2', x + 40, y + 24);
+
+    shelter = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22];
+    return shelter;
 }
